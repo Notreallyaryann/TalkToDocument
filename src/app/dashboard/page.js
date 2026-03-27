@@ -48,8 +48,10 @@ export default function Dashboard() {
         if (!files || files.length === 0) return;
 
         for (const file of files) {
-            if (!file.name.endsWith(".pdf")) {
-                addToast(`${file.name} is not a PDF file`, "error");
+            const isPDF = file.name.endsWith(".pdf");
+            const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+            if (!isPDF && !isExcel) {
+                addToast(`${file.name} is not a valid document file`, "error");
                 continue;
             }
 
@@ -159,7 +161,7 @@ export default function Dashboard() {
                 <div className="sidebar-documents">
                     {documents.length === 0 ? (
                         <p style={{ padding: "12px", fontSize: "13px", color: "var(--text-muted)" }}>
-                            No documents yet. Upload a PDF to get started.
+                            No documents yet. Upload a document to get started.
                         </p>
                     ) : (
                         documents.map((doc) => (
@@ -284,7 +286,7 @@ export default function Dashboard() {
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".pdf"
+                                accept=".pdf,.xlsx,.xls"
                                 multiple
                                 style={{ display: "none" }}
                                 onChange={(e) => handleUpload(e.target.files)}
@@ -301,7 +303,7 @@ export default function Dashboard() {
                                         : "Drag & drop your PDF here, or click to browse"}
                             </div>
                             <div className="upload-subtext">
-                                Supports PDF files up to 50MB
+                                Supports PDF and Excel files up to 50MB
                             </div>
                             {uploading && (
                                 <div className="upload-progress">
@@ -324,7 +326,7 @@ export default function Dashboard() {
                             <div className="empty-state">
                                 <div className="empty-state-icon">📭</div>
                                 <h3>No documents yet</h3>
-                                <p>Upload your first PDF to start chatting with it using AI.</p>
+                                <p>Upload your first document to start chatting with it using AI.</p>
                             </div>
                         ) : (
                             <div className="documents-grid">

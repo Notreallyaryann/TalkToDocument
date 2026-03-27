@@ -1,6 +1,6 @@
-
 export async function chatWithCerebras(messages, stream = false) {
-    const apiKey = process.env.CEREBRAS_API_KEY;
+    const { getNextCerebrasKey } = await import("./rotator");
+    const apiKey = getNextCerebrasKey();
     const model = process.env.CEREBRAS_MODEL || "llama-3.3-70b";
 
     const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {

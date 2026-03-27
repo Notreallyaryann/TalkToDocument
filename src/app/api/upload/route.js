@@ -19,19 +19,43 @@ export async function POST(req) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        if (!file.name.endsWith(".pdf")) {
-            return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
+        if (!file.name.endsWith(".pdf") && !file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+            return NextResponse.json({ error: "Only PDF and Excel files are supported" }, { status: 400 });
         }
 
-        const pdf = (await import('pdf-parse')).default;
-        
-        // Parse PDF
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const pdfData = await pdf(buffer);
-        const text = pdfData.text;
+        let text = "";
+        let numPages = 0;
+
+        if (file.name.endsWith(".pdf")) {
+            const pdf = (await import('pdf-parse')).default;
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const pdfData = await pdf(buffer);
+            text = pdfData.text;
+            numPages = pdfData.numpages;
+        } else {
+            const XLSX = await import('xlsx');
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const workbook = XLSX.read(buffer, { type: 'buffer' });
+            
+            // Extract text from all sheets
+            workbook.SheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                // Convert sheet to JSON/CSV-like text
+                const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                const sheetText = jsonSheet
+                    .map(row => row.filter(cell => cell !== null && cell !== undefined).join(" "))
+                    .filter(rowText => rowText.trim().length > 0)
+                    .join("\n");
+                
+                if (sheetText.trim().length > 0) {
+                    text += `Sheet: ${sheetName}\n${sheetText}\n\n`;
+                }
+            });
+            numPages = workbook.SheetNames.length;
+        }
 
         if (!text || text.trim().length === 0) {
-            return NextResponse.json({ error: "Could not extract text from PDF" }, { status: 400 });
+            return NextResponse.json({ error: "Could not extract text from document" }, { status: 400 });
         }
 
       
@@ -77,7 +101,7 @@ export async function POST(req) {
             documentId,
             fileName: file.name,
             chunks: chunks.length,
-            pages: pdfData.numpages,
+            pages: numPages,
         });
     } catch (error) {
         console.error("Upload error:", error);

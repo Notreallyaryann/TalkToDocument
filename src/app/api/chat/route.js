@@ -28,12 +28,11 @@ export async function POST(req) {
         let ragContext = "";
         if (documentId) {
             try {
-                // ✅ Dynamically import getEmbedding ONLY when needed
                 const { getEmbedding } = await import('@/lib/embeddings');
-                
+
                 console.log('🔍 Generating embedding for query...');
                 const queryEmbedding = await getEmbedding(message);
-                
+
                 const results = await searchVectors(queryEmbedding, userId, documentId, 5);
                 if (results && results.length > 0) {
                     ragContext = results
@@ -134,9 +133,9 @@ Format your responses using Markdown for better readability.`;
             },
         });
     } catch (error) {
-        console.error("Chat error:", error);
+        console.error("Chat error:", error.message);
         return NextResponse.json(
-            { error: "Failed to generate response: " + error.message },
+            { error: "I'm having trouble connecting to the AI right now. Please try again in a moment." },
             { status: 500 }
         );
     }
