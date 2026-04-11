@@ -9,6 +9,22 @@ jobs:
   keep-awake:
     runs-on: ubuntu-latest
     steps:
-      - name: Curl Render App
+      - name: Ping Render App
         run: |
-          curl --silent --show-error --fail ${{ secrets.RENDER_APP_URL }} || echo "Ping failed"
+          URL="${{ secrets.RENDER_APP_URL }}"
+          if [ -z "$URL" ]; then
+            echo "::error::RENDER_APP_URL secret is not defined in GitHub Secrets."
+            exit 1
+          fi
+          
+          echo "Attempting to ping Render application..."
+          # -L follows redirects, --connect-timeout handles slow boot, -w prints status code
+          STATUS_CODE=$(curl -s -L -o /dev/null -w "%{http_code}" --connect-timeout 60 "$URL")
+          
+          echo "Response status code: $STATUS_CODE"
+          
+          if [ "$STATUS_CODE" -ge 200 ] && [ "$STATUS_CODE" -lt 400 ]; then
+            echo "Success: Application is awake."
+          else
+            echo "::warning::Received status code $STATUS_CODE. (Server responded, which still wakes it up)."
+          fi
