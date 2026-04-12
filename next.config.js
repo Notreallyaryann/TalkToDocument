@@ -7,20 +7,17 @@ const nextConfig = {
     ],
   },
  
-  serverExternalPackages: [
-    'pdf-parse',
-    '@xenova/transformers',
-  ],
-
- 
   experimental: {
-    esmExternals: 'loose',  
-  },
-
-  outputFileTracingExcludes: {
-    '**/*': [
-      '.model_cache/**/*',
-    ]
+    esmExternals: 'loose',
+    serverComponentsExternalPackages: [
+      'pdf-parse',
+      '@xenova/transformers',
+    ],
+    outputFileTracingExcludes: {
+      '**/*': [
+        '.model_cache/**/*',
+      ]
+    },
   },
   
   webpack: (config, { isServer }) => {

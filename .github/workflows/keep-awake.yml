@@ -2,7 +2,9 @@ name: Render Keep Awake
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # GitHub's schedule is unreliable on free accounts and often delayed by 30-50 minutes.
+    # We set it to every 5 minutes to increase the chances of it running at least every 15 minutes.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,18 +15,46 @@ jobs:
         run: |
           URL="${{ secrets.RENDER_APP_URL }}"
           if [ -z "$URL" ]; then
-            echo "::error::RENDER_APP_URL secret is not defined in GitHub Secrets."
+            echo "::error::RENDER_APP_URL secret is not defined in GitHub Secrets. Please add it to Settings > Secrets > Actions."
             exit 1
           fi
           
-          echo "Attempting to ping Render application..."
-          # -L follows redirects, --connect-timeout handles slow boot, -w prints status code
-          STATUS_CODE=$(curl -s -L -o /dev/null -w "%{http_code}" --connect-timeout 60 "$URL")
+          # Clean URL and add cache buster
+          TIMESTAMP=$(date +%s)
+          # Check if URL already has query params
+          if [[ "$URL" == *"?"* ]]; then
+            PING_URL="${URL}&t=${TIMESTAMP}"
+          else
+            PING_URL="${URL}?t=${TIMESTAMP}"
+          fi
+          
+          echo "Attempting to ping: $URL"
+          
+          # Ping 1: Primary wake-up call
+          START_TIME=$(date +%s)
+          STATUS_CODE=$(curl -s -L -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            --connect-timeout 60 \
+            "$PING_URL")
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
           
           echo "Response status code: $STATUS_CODE"
+          echo "Ping took: ${DURATION}s"
           
           if [ "$STATUS_CODE" -ge 200 ] && [ "$STATUS_CODE" -lt 400 ]; then
             echo "Success: Application is awake."
+            
+            # If it took long (>10s), it was likely sleeping. 
+            # Send a second "confirm" ping 30s later to ensure Render registers the activity fully.
+            if [ $DURATION -gt 10 ]; then
+               echo "App was likely cold-starting. Waiting 30s for full boot and sending a follow-up ping..."
+               sleep 30
+               STATUS_CODE2=$(curl -s -L -o /dev/null -w "%{http_code}" \
+                 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+                 "$PING_URL")
+               echo "Follow-up ping status: $STATUS_CODE2"
+            fi
           else
-            echo "::warning::Received status code $STATUS_CODE. (Server responded, which still wakes it up)."
+            echo "::warning::Received status code $STATUS_CODE. Server might be waking up or in an error state."
           fi

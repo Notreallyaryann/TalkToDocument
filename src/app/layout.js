@@ -4,8 +4,8 @@ import { Providers } from "@/components/Providers";
 export const metadata = {
     title: "RagSphere - AI Document Intelligence",
     description:
-        "Upload PDFs, chat with your documents using AI. Powered by Cerebras, Qdrant, Neo4j, and HuggingFace.",
-    keywords: "RAG, AI, PDF, document, chat, vector search, knowledge graph",
+        "Upload PDFs and Excel files, chat with your documents using advanced AI. Get intelligent answers powered by vector search and knowledge graphs.",
+    keywords: "RAG, AI, PDF, Excel, document, chat, vector search, knowledge graph",
 };
 
 export default function RootLayout({ children }) {
