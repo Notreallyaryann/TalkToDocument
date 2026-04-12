@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 export default function ChatPage() {
     const { data: session, status } = useSession();
@@ -205,7 +206,7 @@ export default function ChatPage() {
                 <div className="p-3 border-t border-white/[0.06]">
                     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.04] transition-colors duration-200">
                         {session.user.image ? (
-                            <img src={session.user.image} alt={session.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/10" />
+                            <Image src={session.user.image} alt={session.user.name} width={32} height={32} className="rounded-full object-cover ring-2 ring-white/10" />
                         ) : (
                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-xs font-bold text-black">
                                 {session.user.name?.[0] || "U"}

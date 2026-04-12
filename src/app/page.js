@@ -229,7 +229,7 @@ export default function Home() {
                                             <span className="text-xs font-bold text-brand-400 uppercase tracking-wider">AI Insight</span>
                                         </div>
                                         <p className="text-sm text-white/70 italic">
-                                            "Based on your document, the core concept hinges on the relationship between variable X and Y..."
+                                            &quot;Based on your document, the core concept hinges on the relationship between variable X and Y...&quot;
                                         </p>
                                     </div>
                                     <div className="flex justify-end">
