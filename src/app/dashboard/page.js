@@ -412,7 +412,7 @@ export default function Dashboard() {
                                 )}
                             </button>
                         </div>
-                        <p className="text-[10px] text-white/20 mt-2 ml-1">We'll fetch the transcript, chunk it, and index it for chat.</p>
+                        <p className="text-[10px] text-white/20 mt-2 ml-1">We&apos;ll fetch the transcript, chunk it, and index it for chat.</p>
                     </div>
 
                     {/* Documents Grid */}
