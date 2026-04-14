@@ -86,6 +86,23 @@ export async function POST(req) {
         const { storeDocumentMetadata } = await import('@/lib/neo4j');
         await storeDocumentMetadata(userId, documentId, fileName, chunks.length);
 
+        //  Store in MongoDB
+        try {
+            const connectDB = (await import('@/lib/db')).default;
+            const Document = (await import('@/models/Document')).default;
+            await connectDB();
+            await Document.create({
+                userId,
+                documentId,
+                fileName,
+                fileType: "youtube",
+                chunkCount: chunks.length,
+                status: "ready"
+            });
+        } catch (mongoError) {
+            console.error("MongoDB YouTube storage error:", mongoError);
+        }
+
         return NextResponse.json({
             success: true,
             documentId,

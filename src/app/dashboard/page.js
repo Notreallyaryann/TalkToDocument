@@ -456,6 +456,11 @@ export default function Dashboard() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-sm font-semibold text-white/80 truncate">{doc.fileName}</div>
                                                 <div className="text-xs text-white/25 mt-0.5">{doc.chunkCount} chunks · {doc.chatCount || 0} chats</div>
+                                                {doc.lastMessage && (
+                                                    <div className="mt-2 text-[11px] text-white/40 italic line-clamp-1 bg-white/[0.03] px-2 py-1 rounded border border-white/[0.05]">
+                                                        &quot;{doc.lastMessage}&quot;
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex gap-2">

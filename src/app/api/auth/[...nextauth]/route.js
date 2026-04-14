@@ -1,8 +1,11 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
+import clientPromise from "@/lib/mongodb";
 
 export const authOptions = {
+    adapter: MongoDBAdapter(clientPromise),
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
@@ -13,13 +16,16 @@ export const authOptions = {
             clientSecret: process.env.GITHUB_CLIENT_SECRET,
         }),
     ],
+    session: {
+        strategy: "jwt",
+    },
     pages: {
         signIn: "/auth/signin",
     },
     callbacks: {
-        async session({ session, token }) {
+        async session({ session, token, user }) {
             if (session?.user) {
-                session.user.id = token.sub;
+                session.user.id = user?.id || token?.sub || token?.id;
             }
             return session;
         },

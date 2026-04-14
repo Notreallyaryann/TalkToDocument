@@ -78,13 +78,21 @@ export async function POST(req) {
             console.error("Knowledge graph error:", error.message);
         }
 
-        // Get conversation history from Neo4j
+        // Get conversation history from MongoDB
         let history = [];
         if (documentId) {
             try {
-                history = await getConversationHistory(userId, documentId, 5);
+                const connectDB = (await import('@/lib/db')).default;
+                const Chat = (await import('@/models/Chat')).default;
+                await connectDB();
+                
+                const chatDoc = await Chat.findOne({ userId, documentId });
+                if (chatDoc && chatDoc.messages) {
+                    // Take last 5 messages (or last 10 roles)
+                    history = chatDoc.messages.slice(-5);
+                }
             } catch (error) {
-                console.error("History retrieval error:", error.message);
+                console.error("MongoDB history retrieval error:", error.message);
             }
         }
 
@@ -110,14 +118,35 @@ Format your responses using Markdown for better readability.`;
 
         // Add conversation history
         for (const h of history) {
-            messages.push({ role: "user", content: h.userMessage });
-            messages.push({ role: "assistant", content: h.assistantMessage });
+            messages.push({ role: h.role, content: h.content });
         }
 
         messages.push({ role: "user", content: message });
 
         //  Get response from Cerebras
         const answer = await chatWithCerebras(messages);
+
+        //  Store in MongoDB
+        try {
+            const connectDB = (await import('@/lib/db')).default;
+            const Chat = (await import('@/models/Chat')).default;
+            await connectDB();
+            
+            await Chat.findOneAndUpdate(
+                { userId, documentId },
+                { 
+                    $push: { 
+                        messages: [
+                            { role: "user", content: message },
+                            { role: "assistant", content: answer }
+                        ] 
+                    } 
+                },
+                { upsert: true, new: true }
+            );
+        } catch (mongoError) {
+            console.error("MongoDB chat storage error:", mongoError);
+        }
 
         //  Store conversation in Neo4j (async, don't await)
         if (documentId) {

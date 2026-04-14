@@ -1,9 +1,11 @@
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getUserDocuments, deleteDocumentFromGraph } from "@/lib/neo4j";
+import { deleteDocumentFromGraph } from "@/lib/neo4j";
 import { deleteDocumentVectors } from "@/lib/qdrant";
+import connectDB from "@/lib/db";
+import Document from "@/models/Document";
+import Chat from "@/models/Chat";
 
 export async function GET(req) {
     try {
@@ -12,8 +14,23 @@ export async function GET(req) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const documents = await getUserDocuments(session.user.id);
-        return NextResponse.json({ documents });
+        await connectDB();
+        const userId = session.user.id;
+        
+        // Fetch documents
+        const docs = await Document.find({ userId }).sort({ uploadDate: -1 }).lean();
+        
+        // Enrich with last chat message
+        const enrichedDocs = await Promise.all(docs.map(async (doc) => {
+            const chat = await Chat.findOne({ userId, documentId: doc.documentId }).lean();
+            const lastMessage = chat?.messages?.[chat.messages.length - 1]?.content || null;
+            return {
+                ...doc,
+                lastMessage: lastMessage ? (lastMessage.length > 60 ? lastMessage.substring(0, 60) + "..." : lastMessage) : null
+            };
+        }));
+        
+        return NextResponse.json({ documents: enrichedDocs });
     } catch (error) {
         console.error("Documents list error:", error);
         return NextResponse.json(
@@ -37,10 +54,14 @@ export async function DELETE(req) {
 
         const userId = session.user.id;
 
-        // Delete from both Qdrant and Neo4j
+        await connectDB();
+
+        // Delete from all databases
         await Promise.all([
             deleteDocumentVectors(userId, documentId),
             deleteDocumentFromGraph(userId, documentId),
+            Document.deleteOne({ userId, documentId }),
+            Chat.deleteOne({ userId, documentId })
         ]);
 
         return NextResponse.json({ success: true });

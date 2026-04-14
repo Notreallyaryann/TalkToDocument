@@ -42,14 +42,28 @@ export default function ChatPage() {
         }
     }, [documentId]);
 
+    const fetchHistory = useCallback(async () => {
+        if (!documentId) return;
+        try {
+            const res = await fetch(`/api/chat/history/${documentId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(data.messages || []);
+            }
+        } catch (error) {
+            console.error("Error fetching history:", error);
+        }
+    }, [documentId]);
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/auth/signin");
         }
         if (status === "authenticated") {
             fetchDocuments();
+            fetchHistory();
         }
-    }, [status, router, fetchDocuments]);
+    }, [status, router, fetchDocuments, fetchHistory]);
 
     const sendMessage = async (e) => {
         e?.preventDefault();
