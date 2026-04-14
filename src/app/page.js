@@ -87,16 +87,16 @@ export default function Home() {
 
                     {/* Headline */}
                     <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tighter leading-[1] mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                        Turn Complex PDFs into
+                        Turn PDFs, Excel &
                         <br />
                         <span className="text-white/60">
-                            Easy-to-Understand Summaries in Seconds
+                            YouTube Links into Insights
                         </span>
                     </h1>
 
                     {/* Subtitle */}
                     <p className="text-lg lg:text-xl text-white/40 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        Stop wasting time searching through PDFs. Get instant answers, highlights, and summaries—so you can focus on acing your exams.
+                        Stop wasting time searching through endless documents. Get instant answers from PDFs, spreadsheets, and YouTube videos—all in one intelligent interface.
                     </p>
 
                     {/* CTA Buttons */}
@@ -128,11 +128,11 @@ export default function Home() {
                             {
                                 icon: (
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                                     </svg>
                                 ),
-                                title: "Upload & Parse",
-                                description: "Drop PDFs and Excel spreadsheets. We chunk, embed, and index them with vector search in seconds.",
+                                title: "Multi-Source Intake",
+                                description: "Drop PDFs, Excel spreadsheets, or paste YouTube links. We chunk and index everything for instant retrieval.",
                                 gradient: "from-brand-500/20 to-brand-600/5",
                             },
                             {
@@ -184,11 +184,11 @@ export default function Home() {
                         <div className="space-y-8 animate-fade-in-left">
                             <h2 className="text-4xl lg:text-6xl font-bold tracking-tight">
                                 Get Instant Answers <br />
-                                <span className="bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent">from Any PDF or Excel</span>
+                                <span className="bg-gradient-to-r from-brand-400 to-red-400 bg-clip-text text-transparent">from Documents & Videos</span>
                             </h2>
                             <p className="text-xl text-white/60 leading-relaxed">
-                                Save Hours of Study Time. No more struggling with dense PDF textbooks or complex spreadsheets.
-                                Just ask your questions, and let RagSphere break it down into easy-to-understand insights—anytime, anywhere.
+                                Save Hours of Research Time. No more struggling with dense PDF textbooks, complex spreadsheets, or long video lectures.
+                                Just ask your questions, and let RagSphere break it down into easy-to-understand insights.
                             </p>
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
@@ -197,7 +197,7 @@ export default function Home() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="text-white/80 font-medium">Break down complex academic material</span>
+                                    <span className="text-white/80 font-medium">Break down complex PDFs in seconds</span>
                                 </div>
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                                     <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
@@ -205,7 +205,15 @@ export default function Home() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-                                    <span className="text-white/80 font-medium">Analyze Excel spreadsheets in seconds</span>
+                                    <span className="text-white/80 font-medium">Analyze Excel spreadsheets effortlessly</span>
+                                </div>
+                                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 4-8 4z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-white/80 font-medium">Chat with YouTube video transcripts</span>
                                 </div>
                             </div>
                             <p className="text-lg text-brand-400 font-semibold italic">

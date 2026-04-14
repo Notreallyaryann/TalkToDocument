@@ -36,7 +36,10 @@ export async function POST(req) {
                 const results = await searchVectors(queryEmbedding, userId, documentId, 5);
                 if (results && results.length > 0) {
                     ragContext = results
-                        .map((r) => r.payload.text)
+                        .map((r) => {
+                            const sourceLabel = r.payload.source === "youtube" ? "🎥 YOUTUBE TRANSCRIPT" : "📄 DOCUMENT";
+                            return `[Source: ${sourceLabel} - ${r.payload.fileName}]\n${r.payload.text}`;
+                        })
                         .join("\n\n---\n\n");
                 }
             } catch (error) {
@@ -86,8 +89,9 @@ export async function POST(req) {
         }
 
         //  Build messages for Cerebras
-        let systemContent = `You are RagSphere AI, an intelligent assistant that helps users understand their documents.
-You answer questions accurately based on the provided context. If the context doesn't contain enough information, say so honestly.
+        let systemContent = `You are RagSphere AI, an intelligent assistant that helps users understand their documents and videos.
+You answer questions accurately based on the provided context. The context may include text from PDFs, Excel sheets, or YouTube transcripts.
+If the context mentions a video transcript, treat it as video content.
 Format your responses using Markdown for better readability.`;
 
         if (ragContext) {

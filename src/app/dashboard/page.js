@@ -13,6 +13,8 @@ export default function Dashboard() {
     const [uploadProgress, setUploadProgress] = useState("");
     const [dragActive, setDragActive] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [ytUrl, setYtUrl] = useState("");
+    const [processingYt, setProcessingYt] = useState(false);
     const [toasts, setToasts] = useState([]);
     const fileInputRef = useRef(null);
 
@@ -83,6 +85,38 @@ export default function Dashboard() {
 
         setUploading(false);
         setUploadProgress("");
+    };
+
+    const handleYtProcess = async () => {
+        if (!ytUrl || !ytUrl.trim()) {
+            addToast("Please enter a valid YouTube URL", "error");
+            return;
+        }
+
+        setProcessingYt(true);
+        addToast("Starting YouTube transcript extraction...", "info");
+
+        try {
+            const res = await fetch("/api/ingest/youtube", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: ytUrl }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                addToast(`YouTube transcript processed successfully (${data.chunks} chunks)`, "success");
+                setYtUrl("");
+                fetchDocuments();
+            } else {
+                addToast(`Failed to process YouTube link: ${data.error}`, "error");
+            }
+        } catch (error) {
+            addToast(`Error: ${error.message}`, "error");
+        } finally {
+            setProcessingYt(false);
+        }
     };
 
     const handleDelete = async (documentId, fileName) => {
@@ -340,6 +374,46 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+                    
+                    {/* YouTube Link Zone */}
+                    <div className="mb-8">
+                        <h3 className="text-base font-semibold text-white/80 mb-4 flex items-center gap-2">
+                            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 4-8 4z" />
+                            </svg>
+                            Process YouTube Video
+                        </h3>
+                        <div className="p-1 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2 overflow-hidden">
+                            <input
+                                type="text"
+                                value={ytUrl}
+                                onChange={(e) => setYtUrl(e.target.value)}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-4 py-3 text-white/70 placeholder:text-white/20"
+                                disabled={processingYt}
+                            />
+                            <button
+                                onClick={handleYtProcess}
+                                disabled={processingYt || !ytUrl.trim()}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 mr-1 ${
+                                    processingYt 
+                                    ? 'bg-white/10 text-white/30 cursor-not-allowed' 
+                                    : 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/10'
+                                }`}
+                                id="process-yt-btn"
+                            >
+                                {processingYt ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Processing...
+                                    </div>
+                                ) : (
+                                    "Extract Transcript"
+                                )}
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-white/20 mt-2 ml-1">We'll fetch the transcript, chunk it, and index it for chat.</p>
+                    </div>
 
                     {/* Documents Grid */}
                     <div>
@@ -364,10 +438,20 @@ export default function Dashboard() {
                                 {documents.map((doc) => (
                                     <div key={doc.documentId} className="group p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 hover:-translate-y-0.5" id={`card-${doc.documentId}`}>
                                         <div className="flex items-start gap-4 mb-4">
-                                            <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
-                                                <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                                </svg>
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                                doc.fileName.startsWith('YouTube:') 
+                                                ? 'bg-red-600/10 border border-red-600/20' 
+                                                : 'bg-brand-500/10 border border-brand-500/20'
+                                            }`}>
+                                                {doc.fileName.startsWith('YouTube:') ? (
+                                                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 4-8 4z" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                    </svg>
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-sm font-semibold text-white/80 truncate">{doc.fileName}</div>
