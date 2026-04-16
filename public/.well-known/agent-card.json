@@ -3,10 +3,15 @@
   "description": "A hybrid RAG agent that ingests PDFs, Excels, and YouTube videos, and answers questions by combining vector search, knowledge graphs, and live web data.",
   "version": "1.0.0",
   "url": "https://ragsphere.vercel.app",
+  "capabilities": ["rag", "web-search", "document-analysis", "youtube-analysis"],
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"],
   "skills": [
     {
       "id": "ingest",
-      "description": "Ingests a document from a public URL (PDF, Excel) or a YouTube link.",
+      "name": "Document Ingestion",
+      "description": "Ingests a document from a public URL (PDF, Excel) or a YouTube link for indexing.",
+      "tags": ["ingestion", "files", "youtube"],
       "input": {
         "type": "object",
         "properties": {
@@ -22,7 +27,9 @@
     },
     {
       "id": "query",
-      "description": "Asks a question against an ingested document or video.",
+      "name": "Knowledge Retrieval",
+      "description": "Asks a question against an ingested document or video using hybrid RAG.",
+      "tags": ["query", "qa", "rag"],
       "input": {
         "type": "object",
         "properties": {
