@@ -3,7 +3,12 @@
   "description": "A hybrid RAG agent that ingests PDFs, Excels, and YouTube videos, and answers questions by combining vector search, knowledge graphs, and live web data.",
   "version": "1.0.0",
   "url": "https://ragsphere.vercel.app",
-  "capabilities": ["rag", "web-search", "document-analysis", "youtube-analysis"],
+  "capabilities": {
+    "rag": true,
+    "web-search": true,
+    "document-analysis": true,
+    "youtube-analysis": true
+  },
   "defaultInputModes": ["text"],
   "defaultOutputModes": ["text"],
   "skills": [
