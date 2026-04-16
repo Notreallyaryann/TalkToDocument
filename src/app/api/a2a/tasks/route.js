@@ -48,9 +48,14 @@ export async function OPTIONS() {
     return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
+// Handle Health Checks (GET)
+export async function GET() {
+    return NextResponse.json({ status: "healthy", timestamp: new Date().toISOString() }, { headers: corsHeaders });
+}
+
 export async function POST(req) {
     try {
-        //  Authentication Check (compare hashed key)
+        // Authentication Check (compare hashed key)
         const apiKey = req.headers.get("x-a2a-key");
         if (!apiKey) {
             return NextResponse.json(
