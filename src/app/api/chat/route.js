@@ -9,6 +9,16 @@ import {
     getConversationHistory,
     queryKnowledgeGraph,
 } from "@/lib/neo4j";
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
+import connectDB from "@/lib/db";
+import Document from "@/models/Document";
+
+// Max message length to prevent abuse
+const MAX_MESSAGE_LENGTH = 10000;
+// Max messages to keep in chat history (prevents MongoDB 16MB limit)
+const MAX_CHAT_MESSAGES = 200;
+// Messages older than this are purged
+const CHAT_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
 export async function POST(req) {
     try {
@@ -18,10 +28,31 @@ export async function POST(req) {
         }
 
         const userId = session.user.id;
+
+        // Rate limit check (per user, 12h window)
+        const rl = checkRateLimit(`${userId}:chat`, RATE_LIMITS.CHAT.limit, RATE_LIMITS.CHAT.windowMs);
+        if (rl.limited) return rateLimitResponse(rl);
+
         const { message, documentId, useWebSearch } = await req.json();
 
-        if (!message) {
+        if (!message || typeof message !== "string" || message.trim().length === 0) {
             return NextResponse.json({ error: "No message provided" }, { status: 400 });
+        }
+
+        if (message.length > MAX_MESSAGE_LENGTH) {
+            return NextResponse.json(
+                { error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.` },
+                { status: 400 }
+            );
+        }
+
+        // Document ownership verification
+        if (documentId) {
+            await connectDB();
+            const doc = await Document.findOne({ userId, documentId });
+            if (!doc) {
+                return NextResponse.json({ error: "Document not found" }, { status: 404 });
+            }
         }
 
         //  Get RAG context from Qdrant
@@ -82,7 +113,6 @@ export async function POST(req) {
         let history = [];
         if (documentId) {
             try {
-                const connectDB = (await import('@/lib/db')).default;
                 const Chat = (await import('@/models/Chat')).default;
                 await connectDB();
                 
@@ -126,24 +156,34 @@ Format your responses using Markdown for better readability.`;
         //  Get response from Cerebras
         const answer = await chatWithCerebras(messages);
 
-        //  Store in MongoDB
+        //  Store in MongoDB with $slice to cap array + purge old messages
         try {
-            const connectDB = (await import('@/lib/db')).default;
             const Chat = (await import('@/models/Chat')).default;
             await connectDB();
             
+            // Push new messages with $slice cap to prevent unbounded growth
             await Chat.findOneAndUpdate(
                 { userId, documentId },
                 { 
                     $push: { 
-                        messages: [
-                            { role: "user", content: message },
-                            { role: "assistant", content: answer }
-                        ] 
+                        messages: {
+                            $each: [
+                                { role: "user", content: message },
+                                { role: "assistant", content: answer }
+                            ],
+                            $slice: -MAX_CHAT_MESSAGES
+                        }
                     } 
                 },
                 { upsert: true, new: true }
             );
+
+            // Purge messages older than 2 days
+            const twoDaysAgo = new Date(Date.now() - CHAT_TTL_MS);
+            await Chat.updateOne(
+                { userId, documentId },
+                { $pull: { messages: { timestamp: { $lt: twoDaysAgo } } } }
+            ).catch(err => console.error("Chat TTL cleanup error:", err.message));
         } catch (mongoError) {
             console.error("MongoDB chat storage error:", mongoError);
         }

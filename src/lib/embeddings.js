@@ -20,15 +20,15 @@ let modelPromise = null;
 
 async function getExtractor() {
     if (modelPromise) return modelPromise;
-    
+
     modelPromise = (async () => {
         try {
             console.log('⏳ Loading model with @xenova/transformers...');
             const start = Date.now();
 
-            // Use quantized model (much smaller)
+
             extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-                quantized: true, // This is key - uses 25MB instead of 90MB
+                quantized: true,
                 progress_callback: (progress) => {
                     if (progress.status === 'download') {
                         const percent = Math.round(progress.progress * 100);
@@ -45,14 +45,14 @@ async function getExtractor() {
             throw error;
         }
     })();
-    
+
     return modelPromise;
 }
 
 export async function getEmbedding(text) {
     try {
         const extractor = await getExtractor();
-        
+
         const output = await extractor([text], {
             pooling: 'mean',
             normalize: true
@@ -68,10 +68,10 @@ export async function getEmbedding(text) {
 
 export async function getEmbeddings(texts) {
     if (!Array.isArray(texts) || texts.length === 0) return [];
-    
+
     try {
         const extractor = await getExtractor();
-        
+
         const output = await extractor(texts, {
             pooling: 'mean',
             normalize: true
@@ -88,7 +88,7 @@ export async function getEmbeddings(texts) {
 
 export function chunkText(text, chunkSize = 1000, overlap = 200) {
     if (!text || typeof text !== 'string') return [];
-    
+
     const chunks = [];
     let start = 0;
     const textLength = text.length;
@@ -98,6 +98,6 @@ export function chunkText(text, chunkSize = 1000, overlap = 200) {
         chunks.push(text.slice(start, end));
         start += chunkSize - overlap;
     }
-    
+
     return chunks;
 }

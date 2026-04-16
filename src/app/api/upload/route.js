@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { v4 as uuidv4 } from "uuid";
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 export async function POST(req) {
     try {
@@ -12,6 +13,11 @@ export async function POST(req) {
         }
 
         const userId = session.user.id;
+
+        // Rate limit check (30 uploads per 12h)
+        const rl = checkRateLimit(`${userId}:upload`, RATE_LIMITS.UPLOAD.limit, RATE_LIMITS.UPLOAD.windowMs);
+        if (rl.limited) return rateLimitResponse(rl);
+
         const formData = await req.formData();
         const file = formData.get("file");
 
@@ -19,112 +25,55 @@ export async function POST(req) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
+        // Server-side file size enforcement
+        if (file.size > MAX_FILE_SIZE) {
+            return NextResponse.json(
+                { error: "File too large. Maximum size is 50MB." },
+                { status: 413 }
+            );
+        }
+
         if (!file.name.endsWith(".pdf") && !file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
             return NextResponse.json({ error: "Only PDF and Excel files are supported" }, { status: 400 });
         }
 
+        const buffer = Buffer.from(await file.arrayBuffer());
         let text = "";
         let numPages = 0;
 
+        // Use centralized extraction functions for consistency
+        const { extractPdfText, extractExcelText, processDocument } = await import('@/lib/ingestion');
+
         if (file.name.endsWith(".pdf")) {
-            const pdf = (await import('pdf-parse')).default;
-            const buffer = Buffer.from(await file.arrayBuffer());
-            const pdfData = await pdf(buffer);
-            text = pdfData.text;
-            numPages = pdfData.numpages;
+            const result = await extractPdfText(buffer);
+            text = result.text;
+            numPages = result.numPages;
         } else {
-            const XLSX = await import('xlsx');
-            const buffer = Buffer.from(await file.arrayBuffer());
-            const workbook = XLSX.read(buffer, { type: 'buffer' });
-            
-            // Extract text from all sheets
-            workbook.SheetNames.forEach(sheetName => {
-                const worksheet = workbook.Sheets[sheetName];
-                // Convert sheet to JSON/CSV-like text
-                const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                const sheetText = jsonSheet
-                    .map(row => row.filter(cell => cell !== null && cell !== undefined).join(" "))
-                    .filter(rowText => rowText.trim().length > 0)
-                    .join("\n");
-                
-                if (sheetText.trim().length > 0) {
-                    text += `Sheet: ${sheetName}\n${sheetText}\n\n`;
-                }
-            });
-            numPages = workbook.SheetNames.length;
+            const result = extractExcelText(buffer);
+            text = result.text;
+            numPages = result.numSheets;
         }
 
         if (!text || text.trim().length === 0) {
             return NextResponse.json({ error: "Could not extract text from document" }, { status: 400 });
         }
 
-      
-        const { chunkText, getEmbeddings } = await import('@/lib/embeddings');
-        
-        // Chunk the text
-        const chunks = chunkText(text, 1000, 200);
-        const documentId = uuidv4();
-
-        // Get embeddings in batches
-        const batchSize = 10;
-        const allPoints = [];
-
-        for (let i = 0; i < chunks.length; i += batchSize) {
-            const batch = chunks.slice(i, i + batchSize);
-            const embeddings = await getEmbeddings(batch);
-
-            for (let j = 0; j < batch.length; j++) {
-                allPoints.push({
-                    id: uuidv4(),
-                    vector: embeddings[j],
-                    payload: {
-                        text: batch[j],
-                        userId,
-                        documentId,
-                        fileName: file.name,
-                        chunkIndex: i + j,
-                        totalChunks: chunks.length,
-                    },
-                });
-            }
-        }
-
-        const { upsertVectors } = await import('@/lib/qdrant');
-        await upsertVectors(allPoints);
-
-       
-        const { storeDocumentMetadata } = await import('@/lib/neo4j');
-        await storeDocumentMetadata(userId, documentId, file.name, chunks.length);
-
-        //  Store in MongoDB
-        try {
-            const connectDB = (await import('@/lib/db')).default;
-            const Document = (await import('@/models/Document')).default;
-            await connectDB();
-            await Document.create({
-                userId,
-                documentId,
-                fileName: file.name,
-                fileType: file.name.endsWith(".pdf") ? "pdf" : "excel",
-                chunkCount: chunks.length,
-                status: "ready"
-            });
-        } catch (mongoError) {
-            console.error("MongoDB storage error:", mongoError);
-            // We don't fail the whole request because Qdrant/Neo4j succeeded
-        }
+        const fileType = file.name.endsWith(".pdf") ? "pdf" : "excel";
+        const result = await processDocument(userId, file.name, fileType, text);
 
         return NextResponse.json({
             success: true,
-            documentId,
-            fileName: file.name,
-            chunks: chunks.length,
+            ...result,
             pages: numPages,
         });
     } catch (error) {
         console.error("Upload error:", error);
+        // Sanitize error message — don't leak internals in production
+        const safeError = process.env.NODE_ENV === "development"
+            ? error.message
+            : "Failed to process document. Please try again.";
         return NextResponse.json(
-            { error: "Failed to process document: " + error.message },
+            { error: safeError },
             { status: 500 }
         );
     }

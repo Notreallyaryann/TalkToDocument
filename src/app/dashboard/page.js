@@ -15,8 +15,58 @@ export default function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [ytUrl, setYtUrl] = useState("");
     const [processingYt, setProcessingYt] = useState(false);
+    const [apiKey, setApiKey] = useState(null);         // plaintext key (only set right after generation)
+    const [hasApiKey, setHasApiKey] = useState(false);   // whether user already has a key (hashed in DB)
+    const [fetchingKey, setFetchingKey] = useState(false);
+    const [showKey, setShowKey] = useState(false);
     const [toasts, setToasts] = useState([]);
     const fileInputRef = useRef(null);
+
+    const fetchApiKey = useCallback(async () => {
+        setFetchingKey(true);
+        try {
+            const res = await fetch("/api/user/keys");
+            if (res.ok) {
+                const data = await res.json();
+                setHasApiKey(data.hasApiKey);
+            }
+        } catch (error) {
+            console.error("Error fetching API key:", error);
+        } finally {
+            setFetchingKey(false);
+        }
+    }, []);
+
+    const handleGenerateKey = async () => {
+        if (hasApiKey && !confirm("This will replace your existing API key. All applications using the old key will lose access. Continue?")) return;
+        try {
+            const res = await fetch("/api/user/keys", { method: "POST" });
+            if (res.ok) {
+                const data = await res.json();
+                setApiKey(data.apiKey);
+                setHasApiKey(true);
+                setShowKey(true);
+                addToast("API Key generated — copy it now, it won't be shown again!", "success");
+            }
+        } catch (error) {
+            addToast("Failed to generate API Key", "error");
+        }
+    };
+
+    const handleDeleteKey = async () => {
+        if (!confirm("Revoke your API key? All applications using this key will lose access.")) return;
+        try {
+            const res = await fetch("/api/user/keys", { method: "DELETE" });
+            if (res.ok) {
+                setApiKey(null);
+                setHasApiKey(false);
+                setShowKey(false);
+                addToast("API Key revoked", "success");
+            }
+        } catch (error) {
+            addToast("Failed to revoke API Key", "error");
+        }
+    };
 
     const addToast = useCallback((message, type = "info") => {
         const id = Date.now();
@@ -44,8 +94,9 @@ export default function Dashboard() {
         }
         if (status === "authenticated") {
             fetchDocuments();
+            fetchApiKey();
         }
-    }, [status, router, fetchDocuments]);
+    }, [status, router, fetchDocuments, fetchApiKey]);
 
     const handleUpload = async (files) => {
         if (!files || files.length === 0) return;
@@ -413,6 +464,106 @@ export default function Dashboard() {
                             </button>
                         </div>
                         <p className="text-[10px] text-white/20 mt-2 ml-1">We&apos;ll fetch the transcript, chunk it, and index it for chat.</p>
+                    </div>
+
+                    {/* Developer Settings - API Key */}
+                    <div className="mb-8">
+                        <h3 className="text-base font-semibold text-white/80 mb-4 flex items-center gap-2">
+                            <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                            </svg>
+                            Developer Settings (A2A)
+                        </h3>
+                        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-white/80 mb-1">Agent API Key</h4>
+                                    <p className="text-xs text-white/30">Use this key to allow other agents to interact with your knowledge base via the A2A protocol.</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {!hasApiKey && !apiKey ? (
+                                        <button
+                                            onClick={handleGenerateKey}
+                                            disabled={fetchingKey}
+                                            className="px-6 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold transition-all duration-300 shadow-lg shadow-purple-500/10"
+                                        >
+                                            Generate API Key
+                                        </button>
+                                    ) : apiKey ? (
+                                        /* Key was JUST generated — show it once */
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex items-center gap-2 bg-white/[0.04] p-1 rounded-xl border border-purple-500/30">
+                                                <div className="px-3 py-1.5 font-mono text-sm text-purple-300/90 bg-black/20 rounded-lg border border-white/5 select-all">
+                                                    {showKey ? apiKey : '••••••••••••••••••••••••'}
+                                                </div>
+                                                <button
+                                                    onClick={() => setShowKey(!showKey)}
+                                                    className="p-2 rounded-lg hover:bg-white/[0.06] text-white/40 transition-colors"
+                                                    title={showKey ? "Hide" : "Show"}
+                                                >
+                                                    {showKey ? (
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.43 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(apiKey);
+                                                        addToast("Copied to clipboard!", "success");
+                                                    }}
+                                                    className="p-2 rounded-lg hover:bg-white/[0.06] text-white/40 transition-colors"
+                                                    title="Copy"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 016.023 0c1.13.094 1.976 1.057 1.976 2.192V7.5m-3 3h3.375c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125h-6.75a1.125 1.125 0 01-1.125-1.125v-6.75c0-.621.504-1.125 1.125-1.125H12m0 0V4.5m-6.75 1.5l.448 8.961a2.25 2.25 0 002.24 2.139h1.166" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={handleDeleteKey}
+                                                    className="p-2 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
+                                                    title="Revoke Key"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-amber-400/70 font-medium">⚠️ Copy this key now — it can&apos;t be shown again after you leave this page.</p>
+                                        </div>
+                                    ) : (
+                                        /* Key exists but is hashed — can't show it */
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                <span className="text-xs text-emerald-300 font-medium">API Key Active</span>
+                                            </div>
+                                            <button
+                                                onClick={handleGenerateKey}
+                                                className="px-4 py-2 rounded-lg hover:bg-purple-500/10 text-purple-400 text-xs font-medium border border-purple-500/20 transition-colors"
+                                                title="Rotate Key (generates a new one)"
+                                            >
+                                                Rotate Key
+                                            </button>
+                                            <button
+                                                onClick={handleDeleteKey}
+                                                className="p-2 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
+                                                title="Revoke Key"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Documents Grid */}

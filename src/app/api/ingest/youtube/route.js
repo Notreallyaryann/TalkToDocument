@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { v4 as uuidv4 } from "uuid";
 import { YoutubeTranscript } from 'youtube-transcript';
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req) {
     try {
@@ -12,10 +12,19 @@ export async function POST(req) {
         }
 
         const userId = session.user.id;
+
+        // Rate limit check (30 YouTube ingestions per 12h)
+        const rl = checkRateLimit(`${userId}:youtube`, RATE_LIMITS.YOUTUBE.limit, RATE_LIMITS.YOUTUBE.windowMs);
+        if (rl.limited) return rateLimitResponse(rl);
+
         const { url } = await req.json();
 
-        if (!url) {
+        if (!url || typeof url !== "string") {
             return NextResponse.json({ error: "No URL provided" }, { status: 400 });
+        }
+
+        if (url.length > 500) {
+            return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
         }
 
         // Extract video ID - supports watch, embed, shorts, and youtube links
@@ -44,76 +53,26 @@ export async function POST(req) {
         const fullText = transcriptData
             .map(item => item.text)
             .join(" ")
-            .replace(/&amp;#39;/g, "'") //converted into HTML Entities
+            .replace(/&#39;/g, "'") //converted into HTML Entities
             .replace(/&quot;/g, '"');
 
-        const { chunkText, getEmbeddings } = await import('@/lib/embeddings');
-
-        // Chunk the text
-        const chunks = chunkText(fullText, 1000, 200);
-        const documentId = uuidv4();
+        const { processDocument } = await import('@/lib/ingestion');
         const fileName = `YouTube: ${videoId}`;
-
-        // Get embeddings in batches
-        const batchSize = 10;
-        const allPoints = [];
-
-        for (let i = 0; i < chunks.length; i += batchSize) {
-            const batch = chunks.slice(i, i + batchSize);
-            const embeddings = await getEmbeddings(batch);
-
-            for (let j = 0; j < batch.length; j++) {
-                allPoints.push({
-                    id: uuidv4(),
-                    vector: embeddings[j],
-                    payload: {
-                        text: batch[j],
-                        userId,
-                        documentId,
-                        fileName,
-                        chunkIndex: i + j,
-                        totalChunks: chunks.length,
-                        source: "youtube",
-                        videoId: videoId
-                    },
-                });
-            }
-        }
-
-        const { upsertVectors } = await import('@/lib/qdrant');
-        await upsertVectors(allPoints);
-
-        const { storeDocumentMetadata } = await import('@/lib/neo4j');
-        await storeDocumentMetadata(userId, documentId, fileName, chunks.length);
-
-        //  Store in MongoDB
-        try {
-            const connectDB = (await import('@/lib/db')).default;
-            const Document = (await import('@/models/Document')).default;
-            await connectDB();
-            await Document.create({
-                userId,
-                documentId,
-                fileName,
-                fileType: "youtube",
-                chunkCount: chunks.length,
-                status: "ready"
-            });
-        } catch (mongoError) {
-            console.error("MongoDB YouTube storage error:", mongoError);
-        }
+        
+        const result = await processDocument(userId, fileName, "youtube", fullText);
 
         return NextResponse.json({
             success: true,
-            documentId,
-            fileName,
-            chunks: chunks.length,
+            ...result,
             videoId
         });
     } catch (error) {
         console.error("YouTube ingestion error:", error);
+        const safeError = process.env.NODE_ENV === "development"
+            ? error.message
+            : "Failed to process YouTube video. Please try again.";
         return NextResponse.json(
-            { error: "Failed to process YouTube video: " + error.message },
+            { error: safeError },
             { status: 500 }
         );
     }

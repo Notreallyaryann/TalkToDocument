@@ -20,24 +20,15 @@ const ChatSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
-    index: true,
   },
   documentId: {
     type: String,
     required: true,
-    index: true,
   },
   messages: [MessageSchema],
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
-// Update the updatedAt field before saving
-ChatSchema.pre("save", function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
+// Compound index for efficient lookups (always queried together)
+ChatSchema.index({ userId: 1, documentId: 1 }, { unique: true });
 
 export default mongoose.models.Chat || mongoose.model("Chat", ChatSchema);
