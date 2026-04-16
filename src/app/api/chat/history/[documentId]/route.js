@@ -15,7 +15,7 @@ export async function GET(req, { params }) {
         const userId = session.user.id;
 
         // Rate limit check
-        const rl = checkRateLimit(`${userId}:chat_history`, RATE_LIMITS.CHAT_HISTORY.limit, RATE_LIMITS.CHAT_HISTORY.windowMs);
+        const rl = await checkRateLimit(`${userId}:chat_history`, RATE_LIMITS.CHAT_HISTORY.limit, RATE_LIMITS.CHAT_HISTORY.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         const { documentId } = params;

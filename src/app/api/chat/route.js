@@ -30,7 +30,7 @@ export async function POST(req) {
         const userId = session.user.id;
 
         // Rate limit check (per user, 12h window)
-        const rl = checkRateLimit(`${userId}:chat`, RATE_LIMITS.CHAT.limit, RATE_LIMITS.CHAT.windowMs);
+        const rl = await checkRateLimit(`${userId}:chat`, RATE_LIMITS.CHAT.limit, RATE_LIMITS.CHAT.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         const { message, documentId, useWebSearch } = await req.json();
@@ -175,7 +175,7 @@ Format your responses using Markdown for better readability.`;
                         }
                     } 
                 },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: "after" }
             );
 
             // Purge messages older than 2 days

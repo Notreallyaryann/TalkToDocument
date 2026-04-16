@@ -12,6 +12,9 @@ import User from "@/models/User";
 import crypto from "crypto";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
+
+const MAX_TRANSCRIPT_CHARS = 100_000;
+
 // Hash API key to compare against stored hash
 function hashApiKey(key) {
     return crypto.createHash('sha256').update(key).digest('hex');
@@ -78,7 +81,7 @@ export async function POST(req) {
         const userId = user._id.toString();
 
         // Rate limit check (per user, 100 requests per 12h)
-        const rl = checkRateLimit(`${userId}:a2a`, RATE_LIMITS.A2A_TASKS.limit, RATE_LIMITS.A2A_TASKS.windowMs);
+        const rl = await checkRateLimit(`${userId}:a2a`, RATE_LIMITS.A2A_TASKS.limit, RATE_LIMITS.A2A_TASKS.window);
         if (rl.limited) {
             return NextResponse.json(
                 {
@@ -116,9 +119,18 @@ export async function POST(req) {
 
                 const { YoutubeTranscript } = await import('youtube-transcript');
                 const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-                const fullText = transcriptData.map(item => item.text).join(" ");
+                const rawText = transcriptData.map(item => item.text).join(" ");
 
-                const result = await processDocument(userId, `YouTube: ${videoId}`, "youtube", fullText);
+                // Enforce ~2 hour max
+                if (rawText.length > MAX_TRANSCRIPT_CHARS) {
+                    const estMinutes = Math.round(rawText.length / 780);
+                    return NextResponse.json(
+                        { error: "Validation Error", message: `Video is too long (~${estMinutes} min). Only videos up to ~2 hours are supported.` },
+                        { status: 400, headers: corsHeaders }
+                    );
+                }
+
+                const result = await processDocument(userId, `YouTube: ${videoId}`, "youtube", rawText);
                 return NextResponse.json({ status: "success", output: result }, { headers: corsHeaders });
 
             } else if (type === "pdf" || type === "excel") {

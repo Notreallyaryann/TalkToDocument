@@ -15,7 +15,7 @@ export async function POST(req) {
         const userId = session.user.id;
 
         // Rate limit check (30 uploads per 12h)
-        const rl = checkRateLimit(`${userId}:upload`, RATE_LIMITS.UPLOAD.limit, RATE_LIMITS.UPLOAD.windowMs);
+        const rl = await checkRateLimit(`${userId}:upload`, RATE_LIMITS.UPLOAD.limit, RATE_LIMITS.UPLOAD.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         const formData = await req.formData();

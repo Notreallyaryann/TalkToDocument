@@ -4,6 +4,8 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { YoutubeTranscript } from 'youtube-transcript';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
+const MAX_TRANSCRIPT_CHARS = 100_000;
+
 export async function POST(req) {
     try {
         const session = await getServerSession(authOptions);
@@ -14,7 +16,7 @@ export async function POST(req) {
         const userId = session.user.id;
 
         // Rate limit check (30 YouTube ingestions per 12h)
-        const rl = checkRateLimit(`${userId}:youtube`, RATE_LIMITS.YOUTUBE.limit, RATE_LIMITS.YOUTUBE.windowMs);
+        const rl = await checkRateLimit(`${userId}:youtube`, RATE_LIMITS.YOUTUBE.limit, RATE_LIMITS.YOUTUBE.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         const { url } = await req.json();
@@ -50,15 +52,28 @@ export async function POST(req) {
         }
 
         // Combine transcript segments
-        const fullText = transcriptData
+        const rawText = transcriptData
             .map(item => item.text)
             .join(" ")
-            .replace(/&#39;/g, "'") //converted into HTML Entities
+            .replace(/&#39;/g, "'") // convert HTML entities
             .replace(/&quot;/g, '"');
+
+        // Enforce ~2 hour max
+        if (rawText.length > MAX_TRANSCRIPT_CHARS) {
+            const estMinutes = Math.round(rawText.length / 780);
+            return NextResponse.json(
+                {
+                    error: `Video is too long (~${estMinutes} min). Only videos up to ~2 hours are supported.`,
+                },
+                { status: 400 }
+            );
+        }
+
+        const fullText = rawText;
 
         const { processDocument } = await import('@/lib/ingestion');
         const fileName = `YouTube: ${videoId}`;
-        
+
         const result = await processDocument(userId, fileName, "youtube", fullText);
 
         return NextResponse.json({

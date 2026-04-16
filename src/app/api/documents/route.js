@@ -18,7 +18,7 @@ export async function GET(req) {
         const userId = session.user.id;
 
         // Rate limit check
-        const rl = checkRateLimit(`${userId}:documents`, RATE_LIMITS.DOCUMENTS.limit, RATE_LIMITS.DOCUMENTS.windowMs);
+        const rl = await checkRateLimit(`${userId}:documents`, RATE_LIMITS.DOCUMENTS.limit, RATE_LIMITS.DOCUMENTS.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         await connectDB();
@@ -56,7 +56,7 @@ export async function DELETE(req) {
         const userId = session.user.id;
 
         // Rate limit check
-        const rl = checkRateLimit(`${userId}:documents_delete`, RATE_LIMITS.DOCUMENTS_DELETE.limit, RATE_LIMITS.DOCUMENTS_DELETE.windowMs);
+        const rl = await checkRateLimit(`${userId}:documents_delete`, RATE_LIMITS.DOCUMENTS_DELETE.limit, RATE_LIMITS.DOCUMENTS_DELETE.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         const { documentId } = await req.json();

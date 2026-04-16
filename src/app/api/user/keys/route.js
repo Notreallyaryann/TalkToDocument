@@ -25,7 +25,7 @@ export async function GET() {
         }
 
         // Rate limit check
-        const rl = checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.windowMs);
+        const rl = await checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         await connectDB();
@@ -54,7 +54,7 @@ export async function POST() {
         }
 
         // Rate limit check
-        const rl = checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.windowMs);
+        const rl = await checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         await connectDB();
@@ -64,7 +64,7 @@ export async function POST() {
         await User.findByIdAndUpdate(
             session.user.id,
             { apiKey: hashedKey },
-            { new: true, upsert: true }
+            { returnDocument: "after", upsert: true }
         );
 
         // Return the plaintext key ONCE — user must save it now, we can't show it again
@@ -86,7 +86,7 @@ export async function DELETE() {
         }
 
         // Rate limit check
-        const rl = checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.windowMs);
+        const rl = await checkRateLimit(`${session.user.id}:user_keys`, RATE_LIMITS.USER_KEYS.limit, RATE_LIMITS.USER_KEYS.window);
         if (rl.limited) return rateLimitResponse(rl);
 
         await connectDB();
