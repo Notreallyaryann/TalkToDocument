@@ -1,22 +1,42 @@
 {
-  "name": "RagSphere Knowledge Agent",
-  "description": "A hybrid RAG agent that ingests PDFs, Excels, and YouTube videos, and answers questions by combining vector search, knowledge graphs, and live web data.",
-  "version": "1.0.0",
+  "name": "RagSphere",
+  "description": "Secure RAG agent for PDF, Excel, and YouTube analysis with rate limiting and API key protection.",
   "url": "https://ragsphere.vercel.app",
-  "capabilities": {
-    "rag": true,
-    "web-search": true,
-    "document-analysis": true,
-    "youtube-analysis": true
+  "version": "1.0.0",
+  "protocolVersion": "0.3.0",
+  "preferredTransport": "JSONRPC",
+  "provider": {
+    "organization": "RagSphere Team",
+    "url": "https://ragsphere.vercel.app"
   },
-  "defaultInputModes": ["text"],
-  "defaultOutputModes": ["text"],
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "securitySchemes": {
+    "ApiKey": {
+      "type": "apiKey",
+      "name": "x-a2a-key",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
   "skills": [
     {
       "id": "ingest",
       "name": "Document Ingestion",
-      "description": "Ingests a document from a public URL (PDF, Excel) or a YouTube link for indexing.",
-      "tags": ["ingestion", "files", "youtube"],
+      "description": "Upload and process PDF, Excel, or YouTube links for indexing and retrieval.",
+      "tags": ["ingest", "processing", "upload"],
+      "examples": ["Process this PDF: https://example.com/doc.pdf"],
+      "inputModes": ["text/plain"],
+      "outputModes": ["text/plain"],
       "input": {
         "type": "object",
         "properties": {
@@ -32,9 +52,12 @@
     },
     {
       "id": "query",
-      "name": "Knowledge Retrieval",
-      "description": "Asks a question against an ingested document or video using hybrid RAG.",
-      "tags": ["query", "qa", "rag"],
+      "name": "RAG Query",
+      "description": "Query your processed documents using semantic search and knowledge graphs.",
+      "tags": ["query", "search", "rag"],
+      "examples": ["What are the key findings in the financial report?"],
+      "inputModes": ["text/plain"],
+      "outputModes": ["text/plain"],
       "input": {
         "type": "object",
         "properties": {
