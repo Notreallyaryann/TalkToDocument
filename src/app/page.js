@@ -58,7 +58,7 @@ export default function Home() {
                         {/* Navigation Links */}
                         <div className="hidden md:flex items-center gap-8 mr-8">
                             <Link href="#features" className="text-sm font-medium text-white/60 hover:text-white transition-colors">Features</Link>
-                            <Link href="#integration" className="text-sm font-medium text-white/60 hover:text-white transition-colors">Docs</Link>
+                            <Link href="/docs" className="text-sm font-medium text-white/60 hover:text-white transition-colors">Docs</Link>
                         </div>
 
                         {/* Auth Buttons */}
@@ -270,115 +270,24 @@ export default function Home() {
             <section id="integration" className="relative py-24 lg:py-32 px-6 lg:px-8 bg-white/[0.01] border-t border-white/5 overflow-hidden">
                 <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-500/5 rounded-full blur-[100px] pointer-events-none" />
                 
-                <div className="max-w-7xl mx-auto relative">
-                    <div className="text-center mb-16 space-y-4">
-                        <div className="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-widest mb-4">
-                            For Developers
-                        </div>
-                        <h2 className="text-3xl lg:text-5xl font-bold tracking-tight">Integrate in Minutes</h2>
-                        <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed">
-                            A2A (Agent-to-Agent) compliant infrastructure designed for seamless automation and custom AI workflows.
-                        </p>
+                <div className="max-w-4xl mx-auto text-center relative">
+                    <div className="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-widest mb-6">
+                        For Developers
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                        {[
-                            {
-                                step: "01",
-                                title: "Obtain API Key",
-                                description: "Sign up and navigate to your dashboard to generate your secure A2A API key. Each key is scoped to your account.",
-                                icon: (
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-                                    </svg>
-                                )
-                            },
-                            {
-                                step: "02",
-                                title: "Ingest Data",
-                                description: "Send PDFs, Excel files, or YouTube links to our ingestion endpoint. We automatically chunk and vector-index your data.",
-                                icon: (
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                                    </svg>
-                                )
-                            },
-                            {
-                                step: "03",
-                                title: "Chat Naturally",
-                                description: "Use our chat endpoint to query your documents using LLMs. Get grounded responses with source citations.",
-                                icon: (
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.94 5.946 5.946 0 001.316-3.903C4.031 14.79 2.25 12 2.25 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                                    </svg>
-                                )
-                            }
-                        ].map((item, i) => (
-                            <div key={i} className="group relative p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-500/50 transition-all duration-300">
-                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-brand-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                                    {item.icon}
-                                </div>
-                                <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
-                                    <span className="text-brand-500/50 font-mono text-sm">{item.step}</span>
-                                    {item.title}
-                                </h3>
-                                <p className="text-white/40 leading-relaxed text-sm">{item.description}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000" />
-                        <div className="relative bg-[#0d0e14] border border-white/10 rounded-2xl p-6 lg:p-10 shadow-2xl">
-                            <div className="flex flex-col lg:flex-row gap-10 items-center">
-                                <div className="flex-1 w-full space-y-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        <span className="text-xs font-mono text-white/40 uppercase tracking-widest">Live API Endpoint</span>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                                            <span className="text-xs font-bold text-green-400 uppercase">POST</span>
-                                            <code className="text-xs text-white/60">https://api.ragsphere.ai/v1/ingest</code>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                                            <span className="text-xs font-bold text-blue-400 uppercase">POST</span>
-                                            <code className="text-xs text-white/60">https://api.ragsphere.ai/v1/chat</code>
-                                        </div>
-                                    </div>
-                                    <Link 
-                                        href="/auth/signin"
-                                        className="inline-flex items-center gap-2 text-brand-400 font-bold hover:text-brand-300 transition-colors"
-                                    >
-                                        View Full Documentation
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                                <div className="flex-1 w-full">
-                                    <div className="bg-black/50 rounded-xl p-6 font-mono text-xs leading-relaxed border border-white/5">
-                                        <div className="flex gap-2 mb-4 text-white/20">
-                                            <span>index.js</span>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-gray-500">{/* Initialize RagSphere SDK */}</p>
-                                            <p><span className="text-purple-400">const</span> <span className="text-blue-400">rag</span> = <span className="text-purple-400">new</span> <span className="text-yellow-400">RagSphere</span>(<span className="text-green-400">&apos;YOUR_API_KEY&apos;</span>);</p>
-                                            <p>&nbsp;</p>
-                                            <p><span className="text-purple-400">await</span> <span className="text-blue-400">rag</span>.<span className="text-yellow-400">ingest</span>({'{'}</p>
-                                            <p>&nbsp;&nbsp;url: <span className="text-green-400">&apos;https://youtube.com/watch?v=...&apos;</span>,</p>
-                                            <p>&nbsp;&nbsp;type: <span className="text-green-400">&apos;youtube&apos;</span></p>
-                                            <p>{'}'});</p>
-                                            <p>&nbsp;</p>
-                                            <p><span className="text-purple-400">const</span> response = <span className="text-purple-400">await</span> <span className="text-blue-400">rag</span>.<span className="text-yellow-400">chat</span>({'{'}</p>
-                                            <p>&nbsp;&nbsp;message: <span className="text-green-400">&apos;Explain the video&apos;</span></p>
-                                            <p>{'}'});</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <h2 className="text-3xl lg:text-5xl font-bold tracking-tight mb-6">Built for Automation</h2>
+                    <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed mb-10">
+                        Our A2A (Agent-to-Agent) compliant API allows you to programmatically ingest documents and query insights. Powerful, secure, and easy to integrate.
+                    </p>
+                    
+                    <Link
+                        href="/docs"
+                        className="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-xl transition-all duration-300 group"
+                    >
+                        View Full Documentation
+                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </Link>
                 </div>
             </section>
 
