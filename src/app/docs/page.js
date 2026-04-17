@@ -236,7 +236,7 @@ export default function DocsPage() {
                         {session ? (
                             <div className="p-5 rounded-2xl border border-green-500/20 bg-green-500/[0.05] flex flex-col sm:flex-row sm:items-center gap-4">
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-green-400 mb-1">You're signed in as {session.user?.email}</p>
+                                    <p className="text-sm font-semibold text-green-400 mb-1">You&apos;re signed in as {session.user?.email}</p>
                                     <p className="text-xs text-white/40">Head to your dashboard to copy your API key.</p>
                                 </div>
                                 <Link href="/dashboard" className="flex-shrink-0 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 transition-colors text-sm font-semibold text-white text-center">
@@ -268,7 +268,7 @@ export default function DocsPage() {
                             <h2 className="text-2xl font-bold">Ingest a Document</h2>
                         </div>
                         <p className="text-white/50 mb-6 leading-relaxed">
-                            Send a URL pointing to a <strong className="text-white/70">PDF</strong>, <strong className="text-white/70">Excel file</strong>, or <strong className="text-white/70">YouTube video</strong>. RagSphere will download, parse, embed, and index it — then return a <code className="text-indigo-400 font-mono text-sm">document_id</code> you'll use for querying.
+                            Send a URL pointing to a <strong className="text-white/70">PDF</strong>, <strong className="text-white/70">Excel file</strong>, or <strong className="text-white/70">YouTube video</strong>. RagSphere will download, parse, embed, and index it — then return a <code className="text-indigo-400 font-mono text-sm">document_id</code> you&apos;ll use for querying.
                         </p>
 
                         <div className="mb-4">
@@ -347,7 +347,7 @@ export default function DocsPage() {
 
                         <div>
                             <CalloutBox type="tip">
-                                Set <code className="text-cyan-300 font-mono text-sm">"use_web_search": true</code> to augment the answer with live search results from the web. Useful for documents referencing recent events or external data.
+                                Set <code className="text-cyan-300 font-mono text-sm">&quot;use_web_search&quot;: true</code> to augment the answer with live search results from the web. Useful for documents referencing recent events or external data.
                             </CalloutBox>
                         </div>
                     </section>
