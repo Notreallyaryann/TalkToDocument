@@ -133,6 +133,7 @@ export const RATE_LIMITS = {
     CHAT_HISTORY: { limit: 500, window: "12h" },
     UPLOAD: { limit: 30, window: "12h" },
     YOUTUBE: { limit: 30, window: "12h" },
+    WEB_INGEST: { limit: 30, window: "12h" },
     DOCUMENTS: { limit: 500, window: "12h" },
     DOCUMENTS_DELETE: { limit: 50, window: "12h" },
     USER_KEYS: { limit: 50, window: "12h" },

@@ -103,16 +103,16 @@ export default function HomeClient() {
 
                     {/* Headline */}
                     <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tighter leading-[1] mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                        Turn PDFs, Excel &
+                        PDFs, Excel & URLs
                         <br />
                         <span className="text-white/60">
-                            YouTube Links into Insights
+                            into Insights
                         </span>
                     </h1>
 
                     {/* Subtitle */}
                     <p className="text-lg lg:text-xl text-white/40 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        Stop wasting time searching through endless documents. Get instant answers from PDFs, spreadsheets, and YouTube videos—all in one intelligent interface.
+                        Stop wasting time searching through endless data. Get instant answers from PDFs, spreadsheets, websites, and YouTube videos—all in one intelligent interface.
                     </p>
 
                     {/* CTA Buttons */}
@@ -147,8 +147,8 @@ export default function HomeClient() {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                                     </svg>
                                 ),
-                                title: "Multi-Source Intake",
-                                description: "Drop PDFs, Excel spreadsheets, or paste YouTube links. We chunk and index everything for instant retrieval.",
+                                title: "Omni-Channel Intake",
+                                description: "Drop PDFs, Excel spreadsheets, or paste any website or YouTube link. We scrape and index everything for instant retrieval.",
                                 gradient: "from-brand-500/20 to-brand-600/5",
                             },
                             {
@@ -222,6 +222,14 @@ export default function HomeClient() {
                                         </svg>
                                     </div>
                                     <span className="text-white/80 font-medium">Analyze Excel spreadsheets effortlessly</span>
+                                </div>
+                                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-white/80 font-medium">Scrape and analyze any website link</span>
                                 </div>
                                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">

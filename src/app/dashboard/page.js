@@ -15,6 +15,8 @@ export default function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [ytUrl, setYtUrl] = useState("");
     const [processingYt, setProcessingYt] = useState(false);
+    const [webUrl, setWebUrl] = useState("");
+    const [processingWeb, setProcessingWeb] = useState(false);
     const [apiKey, setApiKey] = useState(null);         // plaintext key (only set right after generation)
     const [hasApiKey, setHasApiKey] = useState(false);   // whether user already has a key (hashed in DB)
     const [fetchingKey, setFetchingKey] = useState(false);
@@ -167,6 +169,38 @@ export default function Dashboard() {
             addToast(`Error: ${error.message}`, "error");
         } finally {
             setProcessingYt(false);
+        }
+    };
+
+    const handleWebProcess = async () => {
+        if (!webUrl || !webUrl.trim()) {
+            addToast("Please enter a valid Website URL", "error");
+            return;
+        }
+
+        setProcessingWeb(true);
+        addToast("Starting website scraping...", "info");
+
+        try {
+            const res = await fetch("/api/ingest/web", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: webUrl }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                addToast(`Website processed successfully (${data.chunks} chunks)`, "success");
+                setWebUrl("");
+                fetchDocuments();
+            } else {
+                addToast(`Failed to process website: ${data.error}`, "error");
+            }
+        } catch (error) {
+            addToast(`Error: ${error.message}`, "error");
+        } finally {
+            setProcessingWeb(false);
         }
     };
 
@@ -426,6 +460,46 @@ export default function Dashboard() {
                         </div>
                     </div>
                     
+                    {/* Website Link Zone */}
+                    <div className="mb-8">
+                        <h3 className="text-base font-semibold text-white/80 mb-4 flex items-center gap-2">
+                            <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9s2.015-9 4.5-9m0 0a9.015 9.015 0 010 18M12 3a9.004 9.004 0 00-8.716 6.747M12 3a9.004 9.004 0 018.716 6.747" />
+                            </svg>
+                            Process Website Link
+                        </h3>
+                        <div className="p-1 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2 overflow-hidden">
+                            <input
+                                type="text"
+                                value={webUrl}
+                                onChange={(e) => setWebUrl(e.target.value)}
+                                placeholder="https://example.com/blog-post"
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-4 py-3 text-white/70 placeholder:text-white/20"
+                                disabled={processingWeb}
+                            />
+                            <button
+                                onClick={handleWebProcess}
+                                disabled={processingWeb || !webUrl.trim()}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 mr-1 ${
+                                    processingWeb 
+                                    ? 'bg-white/10 text-white/30 cursor-not-allowed' 
+                                    : 'bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/10'
+                                }`}
+                                id="process-web-btn"
+                            >
+                                {processingWeb ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Scraping...
+                                    </div>
+                                ) : (
+                                    "Analyze Link"
+                                )}
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-white/20 mt-2 ml-1">Paste any URL (blog, article, docs) to ingest its main content.</p>
+                    </div>
+
                     {/* YouTube Link Zone */}
                     <div className="mb-8">
                         <h3 className="text-base font-semibold text-white/80 mb-4 flex items-center gap-2">

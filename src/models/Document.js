@@ -17,7 +17,7 @@ const DocumentSchema = new mongoose.Schema({
   },
   fileType: {
     type: String,
-    enum: ["pdf", "excel", "youtube"],
+    enum: ["pdf", "excel", "youtube", "web"],
     required: true,
   },
   chunkCount: {

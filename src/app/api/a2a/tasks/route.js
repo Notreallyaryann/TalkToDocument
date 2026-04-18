@@ -7,6 +7,7 @@ import { searchVectors } from "@/lib/qdrant";
 import { chatWithCerebras } from "@/lib/cerebras";
 import { webSearch } from "@/lib/tavily";
 import { queryKnowledgeGraph } from "@/lib/neo4j";
+import { scrapeUrl } from "@/lib/scraper";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import crypto from "crypto";
@@ -149,10 +150,16 @@ export async function POST(req) {
 
                 const result = await processDocument(userId, fileName, type, text);
                 return NextResponse.json({ status: "success", output: result }, { headers: corsHeaders });
+            } else if (type === "web") {
+                const text = await scrapeUrl(source_url);
+                const fileName = source_url.replace(/^https?:\/\//, "").split("/")[0] || "web_page";
+
+                const result = await processDocument(userId, fileName, "web", text);
+                return NextResponse.json({ status: "success", output: result }, { headers: corsHeaders });
             } else {
                 return NextResponse.json({
                     error: "Unsupported Source",
-                    message: "Currently only YouTube, PDF, and Excel URLs are supported."
+                    message: "Currently only Website links, YouTube, PDF, and Excel URLs are supported."
                 }, { status: 400, headers: corsHeaders });
             }
         }

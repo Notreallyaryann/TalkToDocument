@@ -58,5 +58,5 @@ export function detectFileType(url, contentType) {
         return 'excel';
     }
 
-    return 'unknown';
+    return 'web';
 }

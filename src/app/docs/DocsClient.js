@@ -210,7 +210,7 @@ export default function DocsClient() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
-                                { icon: "📄", title: "PDF, Excel, YouTube", desc: "Ingest any of these source types via a public URL." },
+                                { icon: "📄", title: "PDF, Excel, YouTube, Web", desc: "Ingest generic URLs, PDFs, spreadsheets, or videos." },
                                 { icon: "🔀", title: "Hybrid RAG", desc: "Answers combine vector, graph, and web search results." },
                                 { icon: "🔐", title: "Per-User API Keys", desc: "Each key is scoped to your account — fully isolated." },
                             ].map((card) => (
@@ -268,7 +268,7 @@ export default function DocsClient() {
                             <h2 className="text-2xl font-bold">Ingest a Document</h2>
                         </div>
                         <p className="text-white/50 mb-6 leading-relaxed">
-                            Send a URL pointing to a <strong className="text-white/70">PDF</strong>, <strong className="text-white/70">Excel file</strong>, or <strong className="text-white/70">YouTube video</strong>. RagSphere will download, parse, embed, and index it — then return a <code className="text-indigo-400 font-mono text-sm">document_id</code> you&apos;ll use for querying.
+                            Send a URL pointing to a <strong className="text-white/70">Website</strong>, <strong className="text-white/70">PDF</strong>, <strong className="text-white/70">Excel file</strong>, or <strong className="text-white/70">YouTube video</strong>. RagSphere will download, parse, embed, and index it — then return a <code className="text-indigo-400 font-mono text-sm">document_id</code> you&apos;ll use for querying.
                         </p>
 
                         <div className="mb-4">
@@ -448,7 +448,7 @@ export default function DocsClient() {
                                     </thead>
                                     <tbody className="px-5">
                                         <ParamRow name="skill" type={`"ingest"`} required description='Literal string that selects the ingest skill.' />
-                                        <ParamRow name="input.source_url" type="string (URL)" required description="Public URL to a PDF, Excel (.xlsx), or YouTube video. The resource must be publicly accessible — no auth-protected links." />
+                                        <ParamRow name="input.source_url" type="string (URL)" required description="Public URL to a Website, PDF, Excel (.xlsx), or YouTube video. The resource must be publicly accessible." />
                                     </tbody>
                                 </table>
                             </div>
