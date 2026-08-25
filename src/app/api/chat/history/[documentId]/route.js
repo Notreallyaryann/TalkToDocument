@@ -25,15 +25,15 @@ export async function GET(req, { params }) {
         }
 
         await connectDB();
-        
+
         // Return only last 50 messages for performance (prevents multi-MB responses)
         const chatDoc = await Chat.findOne(
             { userId, documentId },
             { messages: { $slice: -50 } }
         );
-        
-        return NextResponse.json({ 
-            messages: chatDoc?.messages || [] 
+
+        return NextResponse.json({
+            messages: chatDoc?.messages || []
         });
     } catch (error) {
         console.error("Chat history error:", error);

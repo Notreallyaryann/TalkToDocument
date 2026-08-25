@@ -34,7 +34,7 @@ RagSphere exposes its intelligence through the A2A protocol, allowing it to act 
 ### 3. High-Level Workflow
 1.  **Ingestion:** Files or URLs are parsed, chunked, and embedded locally. Data is then distributed across the Tri-Database stack.
 2.  **Retrieval:** A "Triple-Query" system triggers simultaneous searches across **Qdrant**, **Neo4j**, and the **Tavily Web API**.
-3.  **Generation:** The **Context Aggregator** bundles all retrieved data into a precision prompt for the **Cerebras-hosted Llama 3.1** model.
+3.  **Generation:** The **Context Aggregator** bundles all retrieved data into a precision prompt for the **OpenRouter-hosted Llama 3.3** model.
 
 ---
 
@@ -72,7 +72,7 @@ Other developers can integrate RagSphere into their agentic workflows by providi
 ## 💻 Tech Stack
 
 *   **Frontend/Backend:** Next.js 15 (App Router)
-*   **LLM:** Llama 3.1 (via Cerebras API)
+*   **LLM:** Llama 3.3 70B (via OpenRouter API)
 *   **Embeddings:** `@xenova/transformers` (Local)
 *   **Databases:** Qdrant, Neo4j, MongoDB
 *   **Web Search:** Tavily API

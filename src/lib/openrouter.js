@@ -1,13 +1,15 @@
-export async function chatWithCerebras(messages, stream = false) {
-    const { getNextCerebrasKey } = await import("./rotator");
-    const apiKey = getNextCerebrasKey();
-    const model = process.env.CEREBRAS_MODEL || "llama-3.3-70b";
+export async function chatWithOpenRouter(messages, stream = false) {
+    const { getNextOpenRouterKey } = await import("./rotator.js");
+    const apiKey = getNextOpenRouterKey();
+    const model = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct";
 
-    const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://ragsphere.vercel.app",
+            "X-Title": "RagSphere AI",
         },
         body: JSON.stringify({
             model,
@@ -20,7 +22,7 @@ export async function chatWithCerebras(messages, stream = false) {
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Cerebras API error: ${response.status} - ${errorText}`);
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
     if (stream) {
@@ -33,7 +35,7 @@ export async function chatWithCerebras(messages, stream = false) {
 
 export async function extractEntities(text) {
     try {
-        const response = await chatWithCerebras([
+        const response = await chatWithOpenRouter([
             {
                 role: "system",
                 content:
