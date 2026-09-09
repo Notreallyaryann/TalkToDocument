@@ -446,7 +446,7 @@ export default function Dashboard() {
                                     <p className="text-sm font-medium text-white/70">
                                         {uploading ? "Processing..." : dragActive ? "Drop your file here!" : "Drag & drop your file here, or click to browse"}
                                     </p>
-                                    <p className="text-xs text-white/25 mt-1">Supports PDF and Excel files up to 50MB</p>
+                                    <p className="text-xs text-white/25 mt-1">Supports PDF and Excel files up to 30MB</p>
                                 </div>
                                 {uploading && (
                                     <div className="w-full max-w-xs mt-2">

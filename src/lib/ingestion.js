@@ -1,10 +1,10 @@
 
 import { v4 as uuidv4 } from "uuid";
-import { chunkText, getEmbeddings } from "./embeddings";
-import { upsertVectors } from "./qdrant";
-import { storeDocumentMetadata } from "./neo4j";
-import connectDB from "./db";
-import Document from "@/models/Document";
+import { chunkText, getEmbeddings } from "./embeddings.js";
+import { upsertVectors } from "./qdrant.js";
+import { storeDocumentMetadata } from "./neo4j.js";
+import connectDB from "./db.js";
+import Document from "../models/Document.js";
 
 /**
  * Extract text from a PDF buffer. Centralized to ensure consistent extraction.
@@ -12,9 +12,30 @@ import Document from "@/models/Document";
  * @returns {Promise<{text: string, numPages: number}>}
  */
 export async function extractPdfText(buffer) {
-    const pdf = (await import('pdf-parse')).default;
-    const pdfData = await pdf(buffer);
-    return { text: pdfData.text, numPages: pdfData.numpages };
+    if (!buffer || buffer.length === 0) {
+        throw new Error("PDF file buffer is empty.");
+    }
+    try {
+        const pdf = (await import('pdf-parse')).default;
+        const pdfData = await pdf(buffer);
+        return { text: pdfData.text, numPages: pdfData.numpages };
+    } catch (error) {
+        const errMsg = error?.message || "";
+        const errDetails = error?.details || "";
+        const fullErrStr = `${errMsg} ${errDetails}`;
+
+        if (fullErrStr.includes("bad XRef entry") || fullErrStr.includes("FormatError")) {
+            throw new Error("The PDF document structure is corrupted or invalid (bad cross-reference table). Please re-save or repair the PDF before uploading.");
+        }
+        if (fullErrStr.toLowerCase().includes("password") || error?.name === "PasswordException") {
+            throw new Error("The PDF document is password-protected or encrypted. Please remove password protection before uploading.");
+        }
+        if (fullErrStr.includes("Invalid PDF") || error?.name === "InvalidPDFException") {
+            throw new Error("The file is not a valid PDF document or is severely corrupted.");
+        }
+
+        throw new Error(`Failed to parse PDF document: ${errMsg || "Unknown PDF parsing error"}`);
+    }
 }
 
 /**
@@ -43,10 +64,63 @@ export function extractExcelText(buffer) {
     return { text, numSheets: workbook.SheetNames.length };
 }
 
+/**
+ * Security check: Rejects files containing shell scripts, exploit code, reverse shell payloads,
+ * executable script tags, or dangerous double extensions.
+ */
+export function validateContentSafety(text, fileName) {
+    if (!text || typeof text !== "string") {
+        throw new Error("No readable text found in document.");
+    }
+
+    const lowerFileName = (fileName || "").toLowerCase();
+
+    // Check for dangerous script/executable extensions (including double extension tricks like exploit.sh.pdf)
+    const dangerousExtensions = [
+        ".sh", ".exe", ".bat", ".cmd", ".js", ".py", ".vbs", ".php",
+        ".rb", ".ps1", ".pl", ".elf", ".scr", ".jar", ".dll", ".so",
+        ".asp", ".jsp", ".c", ".cpp", ".cs"
+    ];
+
+    for (const ext of dangerousExtensions) {
+        if (lowerFileName.endsWith(ext) || lowerFileName.includes(`${ext}.`)) {
+            throw new Error(`Security Violation: File '${fileName}' has a forbidden script or executable extension.`);
+        }
+    }
+
+    // Exploit script & shell execution signatures to block
+    const exploitPatterns = [
+        /#!/i,                                         // Shebang line (#!/bin/bash, #!/usr/bin/python, etc.)
+        /\/bin\/(bash|sh|zsh|dash|ksh)/i,              // Shell binary execution
+        /nc(\.openbsd|\.traditional)?\s+-[eL]/i,       // Netcat reverse shell
+        /bash\s+-i/i,                                  // Interactive bash shell
+        /powershell(\.exe)?\s+-(nop|w\s+hidden|e)/i,  // Powershell stealth execution
+        /Invoke-Expression|IEX\s*\(/i,                 // Powershell IEX exploit code
+        /eval\s*\(\s*base64_decode/i,                  // PHP / web shell payload
+        /<script[\s>]/i,                               // HTML / Javascript script tag injection
+        /javascript:\s*/i,                             // Inline JS URI payload
+        /document\.cookie/i,                           // XSS cookie stealer script
+        /system\s*\(\s*['"](rm|curl|wget|chmod|cat)/i, // C / PHP system call exploit
+        /subprocess\.(Popen|call|run)/i,               // Python process spawn exploit
+        /os\.system\s*\(/i,                            // Python system execution exploit
+        /curl\s+[^|\n]+\|\s*(bash|sh)/i,               // Remote script piping (curl | bash)
+        /wget\s+[^|\n]+\|\s*(sh|bash)/i                // Remote script piping (wget | sh)
+    ];
+
+    for (const pattern of exploitPatterns) {
+        if (pattern.test(text)) {
+            throw new Error("Security Violation: Document contains forbidden script code or potential exploit payload.");
+        }
+    }
+}
+
 export async function processDocument(userId, fileName, fileType, text) {
     if (!text || text.trim().length === 0) {
         throw new Error("No text content for ingestion");
     }
+
+    // Validate content against exploit scripts and executable payloads
+    validateContentSafety(text, fileName);
 
     // Chunk the text
     const chunks = chunkText(text, 1000, 200);

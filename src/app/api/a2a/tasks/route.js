@@ -14,7 +14,7 @@ import crypto from "crypto";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 
-const MAX_TRANSCRIPT_CHARS = 100_000;
+const MAX_TRANSCRIPT_CHARS = 25_000; // ~30 minutes max speech duration
 
 // Hash API key to compare against stored hash
 function hashApiKey(key) {
@@ -122,11 +122,11 @@ export async function POST(req) {
                 const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
                 const rawText = transcriptData.map(item => item.text).join(" ");
 
-                // Enforce ~2 hour max
+                // Enforce 30 minute max
                 if (rawText.length > MAX_TRANSCRIPT_CHARS) {
                     const estMinutes = Math.round(rawText.length / 780);
                     return NextResponse.json(
-                        { error: "Validation Error", message: `Video is too long (~${estMinutes} min). Only videos up to ~2 hours are supported.` },
+                        { error: "Validation Error", message: `Video is too long (~${estMinutes} min). Only videos up to 30 minutes are supported.` },
                         { status: 400, headers: corsHeaders }
                     );
                 }

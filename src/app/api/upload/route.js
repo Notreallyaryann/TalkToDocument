@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 
 export async function POST(req) {
     try {
@@ -28,13 +28,14 @@ export async function POST(req) {
         // Server-side file size enforcement
         if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json(
-                { error: "File too large. Maximum size is 50MB." },
+                { error: "File too large. Maximum size is 30MB." },
                 { status: 413 }
             );
         }
 
-        if (!file.name.endsWith(".pdf") && !file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-            return NextResponse.json({ error: "Only PDF and Excel files are supported" }, { status: 400 });
+        const fileNameLower = (file.name || "").toLowerCase();
+        if (!fileNameLower.endsWith(".pdf") && !fileNameLower.endsWith(".xlsx") && !fileNameLower.endsWith(".xls")) {
+            return NextResponse.json({ error: "Only PDF and Excel files (.pdf, .xlsx, .xls) are supported" }, { status: 400 });
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -44,7 +45,7 @@ export async function POST(req) {
         // Use centralized extraction functions for consistency
         const { extractPdfText, extractExcelText, processDocument } = await import('@/lib/ingestion');
 
-        if (file.name.endsWith(".pdf")) {
+        if (fileNameLower.endsWith(".pdf")) {
             const result = await extractPdfText(buffer);
             text = result.text;
             numPages = result.numPages;
@@ -58,7 +59,7 @@ export async function POST(req) {
             return NextResponse.json({ error: "Could not extract text from document" }, { status: 400 });
         }
 
-        const fileType = file.name.endsWith(".pdf") ? "pdf" : "excel";
+        const fileType = fileNameLower.endsWith(".pdf") ? "pdf" : "excel";
         const result = await processDocument(userId, file.name, fileType, text);
 
         return NextResponse.json({
@@ -68,13 +69,27 @@ export async function POST(req) {
         });
     } catch (error) {
         console.error("Upload error:", error);
-        // Sanitize error message — don't leak internals in production
-        const safeError = process.env.NODE_ENV === "development"
+        
+        // Categorize document parsing / user input / security errors as 400 Bad Request
+        const isClientError = error.message?.includes("corrupted") ||
+            error.message?.includes("cross-reference table") ||
+            error.message?.includes("password") ||
+            error.message?.includes("valid PDF") ||
+            error.message?.includes("Could not extract") ||
+            error.message?.includes("empty") ||
+            error.message?.includes("Security Violation") ||
+            error.message?.includes("Failed to parse PDF");
+
+        const statusCode = isClientError ? 400 : 500;
+        const safeError = isClientError
             ? error.message
-            : "Failed to process document. Please try again.";
+            : process.env.NODE_ENV === "development"
+                ? error.message
+                : "Failed to process document. Please try again.";
+
         return NextResponse.json(
             { error: safeError },
-            { status: 500 }
+            { status: statusCode }
         );
     }
 }

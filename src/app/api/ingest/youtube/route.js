@@ -4,7 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { YoutubeTranscript } from 'youtube-transcript';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
-const MAX_TRANSCRIPT_CHARS = 100_000;
+const MAX_TRANSCRIPT_CHARS = 25_000; // ~30 minutes max speech duration
 
 export async function POST(req) {
     try {
@@ -51,23 +51,29 @@ export async function POST(req) {
             return NextResponse.json({ error: "Empty transcript" }, { status: 400 });
         }
 
+        // Check transcript duration (duration in ms or offset of last item)
+        const lastItem = transcriptData[transcriptData.length - 1];
+        const durationSec = (lastItem?.offset && lastItem?.duration)
+            ? (lastItem.offset + lastItem.duration) / (lastItem.offset > 10000 ? 1000 : 1)
+            : 0;
+        const estMinutes = durationSec > 0 ? Math.round(durationSec / 60) : Math.round(transcriptData.map(i => i.text).join(" ").length / 780);
+
+        // Enforce 30 minute max
+        if (estMinutes > 30 || transcriptData.map(i => i.text).join(" ").length > MAX_TRANSCRIPT_CHARS) {
+            return NextResponse.json(
+                {
+                    error: `Video is too long (~${estMinutes} min). Only YouTube videos up to 30 minutes are supported.`,
+                },
+                { status: 400 }
+            );
+        }
+
         // Combine transcript segments
         const rawText = transcriptData
             .map(item => item.text)
             .join(" ")
             .replace(/&#39;/g, "'") // convert HTML entities
             .replace(/&quot;/g, '"');
-
-        // Enforce ~2 hour max
-        if (rawText.length > MAX_TRANSCRIPT_CHARS) {
-            const estMinutes = Math.round(rawText.length / 780);
-            return NextResponse.json(
-                {
-                    error: `Video is too long (~${estMinutes} min). Only videos up to ~2 hours are supported.`,
-                },
-                { status: 400 }
-            );
-        }
 
         const fullText = rawText;
 

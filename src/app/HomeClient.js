@@ -111,9 +111,16 @@ export default function HomeClient() {
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="text-lg lg:text-xl text-white/40 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                    <p className="text-lg lg:text-xl text-white/40 max-w-3xl mx-auto mb-8 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                         Stop wasting time searching through endless data. Get instant answers from PDFs, spreadsheets, websites, and YouTube videos—all in one intelligent interface.
                     </p>
+
+                    {/* CodeHype Badge */}
+                    <div className="flex justify-center mb-10 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+                        <a href="https://codehype.ai/product/talk-to-document?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity">
+                            <img src="https://codehype.ai/badges/talk-to-document.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style={{ display: 'block', border: 0, width: '100%', maxWidth: '380px', height: 'auto' }} />
+                        </a>
+                    </div>
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
