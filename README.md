@@ -1,6 +1,8 @@
 # RagSphere (TalkToDocument)
 
-![Architecture](https://github.com/Notreallyaryann/TalkToDocument/blob/main/Architecture.png)
+<a href="https://codehype.ai/product/ragsphere?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer">
+  <img src="https://codehype.ai/badges/ragsphere.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style="display:block;border:0;width:100%;max-width:380px;height:auto;" />
+</a>
 
 RagSphere is a high-performance **Multi-Agent Hybrid RAG system** designed for the agentic era. It synchronizes PDFs, Excel files, and YouTube transcripts across a **Tri-Database stack** (Vector, Graph, and Metadata) to provide deep, real-time intelligence.
 

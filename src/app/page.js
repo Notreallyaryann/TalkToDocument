@@ -38,8 +38,8 @@ export default function Home() {
             <HomeClient />
             {/* CodeHype Verification Badge for Static Crawler Detection */}
             <div style={{ display: 'none' }} aria-hidden="true">
-                <a href="https://codehype.ai/product/talk-to-document?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer">
-                    <img src="https://codehype.ai/badges/talk-to-document.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style={{ display: 'block', border: 0, width: '100%', maxWidth: '380px', height: 'auto' }} />
+                <a href="https://codehype.ai/product/ragsphere?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer">
+                    <img src="https://codehype.ai/badges/ragsphere.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style={{ display: 'block', border: 0, width: '100%', maxWidth: '380px', height: 'auto' }} />
                 </a>
             </div>
         </main>
