@@ -115,15 +115,8 @@ export default function HomeClient() {
                         Stop wasting time searching through endless data. Get instant answers from PDFs, spreadsheets, websites, and YouTube videos—all in one intelligent interface.
                     </p>
 
-                    {/* CodeHype Badge */}
-                    <div className="flex justify-center mb-10 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
-                        <a href="https://codehype.ai/product/ragsphere?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity">
-                            <img src="https://codehype.ai/badges/ragsphere.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style={{ display: 'block', border: 0, width: '100%', maxWidth: '380px', height: 'auto' }} />
-                        </a>
-                    </div>
-
                     {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
                         <Link
                             href="/auth/signin"
                             className="px-8 py-4 bg-white text-black hover:bg-white/90 font-bold rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg shadow-white/5"
@@ -307,18 +300,26 @@ export default function HomeClient() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-white/5 py-8 px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 text-white/30 text-sm">
-                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center">
-                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                        </div>
-                        RagSphere
+            <footer className="border-t border-white/5 py-12 px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto flex flex-col items-center gap-8">
+                    {/* CodeHype Badge */}
+                    <div className="flex justify-center">
+                        <a href="https://codehype.ai/product/ragsphere?utm_source=codehype_badge" target="_blank" rel="noopener noreferrer" className="inline-block hover:opacity-90 transition-opacity">
+                            <img src="https://codehype.ai/badges/ragsphere.svg?variant=find-us&v=11" alt="Find us on CodeHype" width="380" height="100" loading="lazy" decoding="async" style={{ display: 'block', border: 0, width: '100%', maxWidth: '380px', height: 'auto' }} />
+                        </a>
                     </div>
-                    <div className="text-white/20 text-sm">
-                        &copy; {new Date().getFullYear()} RagSphere. Advanced AI Document Intelligence.
+                    <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/5">
+                        <div className="flex items-center gap-2 text-white/30 text-sm">
+                            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center">
+                                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                            </div>
+                            RagSphere
+                        </div>
+                        <div className="text-white/20 text-sm">
+                            &copy; {new Date().getFullYear()} RagSphere. Advanced AI Document Intelligence.
+                        </div>
                     </div>
                 </div>
             </footer>
